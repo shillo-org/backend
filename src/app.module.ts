@@ -7,13 +7,15 @@ import { ConfigService } from './config/config.service';
 import { ConfigModule } from '@nestjs/config';
 import { AgentModule } from './agent/agent.module';
 import { AzureModule } from './azure/azure.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
     AuthModule,
     ConfigModule.forRoot({isGlobal: true}),
     AgentModule,
-    AzureModule
+    AzureModule,
+    ChatModule
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ConfigService],
