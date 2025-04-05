@@ -1,4 +1,14 @@
-import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiSecurity } from '@nestjs/swagger';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AiTokenDto } from './dto/post/aiToken.dto';
@@ -12,95 +22,101 @@ import { PrivyAuthGuard } from 'src/auth/privy-auth-guard';
 
 @Controller('agent')
 export class AgentController {
+  constructor(
+    private agentSerivce: AgentService,
+    private prismaService: PrismaService,
+  ) {}
 
-    constructor(private agentSerivce: AgentService, private prismaService: PrismaService) {}
+  async checkUserOwnsAgent(agentTokenId: number, userId: number) {
+    const token = await this.prismaService.aIToken.findFirst({
+      where: {
+        id: agentTokenId,
+        userId: userId,
+      },
+    });
 
-    async checkUserOwnsAgent(agentTokenId: number, userId: number) { 
-
-        const token = await this.prismaService.aIToken.findFirst({
-            where: {
-                id: agentTokenId,
-                userId: userId
-            }
-        })
-
-        if (token === null) {
-            throw new NotFoundException("Token Not found");
-        }
-
+    if (token === null) {
+      throw new NotFoundException('Token Not found');
     }
+  }
 
-    @Post("create-token")
-    @UseGuards(PrivyAuthGuard)
-    @ApiBearerAuth()
-    @ApiSecurity('bearer')
-    async createToken(@Body() aiTokenDto: AiTokenDto, @GetUser user: any) {
+  @Post('create-token')
+  @UseGuards(PrivyAuthGuard)
+  @ApiBearerAuth()
+  @ApiSecurity('bearer')
+  async createToken(@Body() aiTokenDto: AiTokenDto, @GetUser user: any) {
+    console.log(user);
+    return this.agentSerivce.createToken(
+      user.wallet.address as string,
+      aiTokenDto.tokenName,
+      aiTokenDto.symbol,
+      aiTokenDto.tokenDescription,
+      aiTokenDto.tokenImageUrl,
+      aiTokenDto.supply,
+      aiTokenDto.contractAddress,
+      aiTokenDto.website,
+      aiTokenDto.twitter,
+      aiTokenDto.telegram,
+      aiTokenDto.discord,
+      aiTokenDto.youtube,
+      aiTokenDto.youtubeChannelId,
+      aiTokenDto.twitchChannelId,
+    );
+  }
 
-        return this.agentSerivce.createToken(
-            user.userId as number,
-            aiTokenDto.tokenName,
-            aiTokenDto.symbol,
-            aiTokenDto.tokenDescription,
-            aiTokenDto.tokenImageUrl,
-            aiTokenDto.supply,
-            aiTokenDto.contractAddress,
-            aiTokenDto.website,
-            aiTokenDto.twitter,
-            aiTokenDto.telegram,
-            aiTokenDto.discord,
-            aiTokenDto.youtube,
-            aiTokenDto.youtubeChannelId,
-            aiTokenDto.twitchChannelId
-        )
+  @Post('add-token-character')
+  @UseGuards(PrivyAuthGuard)
+  @ApiBearerAuth()
+  @ApiSecurity('bearer')
+  async addAgentCharacter(
+    @Body() agentCharacterDto: AgentCharacterDto,
+    @GetUser user,
+  ) {
+    await this.checkUserOwnsAgent(
+      agentCharacterDto.aiTokenId,
+      user.userId as number,
+    );
 
-    }
+    return this.agentSerivce.addAgentCharacter(
+      agentCharacterDto.aiTokenId,
+      agentCharacterDto.agentName,
+      agentCharacterDto.agentIpfsUrl,
+      agentCharacterDto.agentImageUrl,
+    );
+  }
 
-    @Post("add-token-character")
-    @UseGuards(PrivyAuthGuard)
-    @ApiBearerAuth()
-    @ApiSecurity('bearer')
-    async addAgentCharacter(@Body() agentCharacterDto: AgentCharacterDto, @GetUser user) {
+  @Post('add-token-personality')
+  @UseGuards(PrivyAuthGuard)
+  @ApiBearerAuth()
+  @ApiSecurity('bearer')
+  async addAgentPersonality(
+    @Body() agentPersonalityDto: AgentPersonalityDto,
+    @GetUser user,
+  ) {
+    await this.checkUserOwnsAgent(
+      agentPersonalityDto.aiTokenId,
+      user.userId as number,
+    );
 
-        await this.checkUserOwnsAgent(agentCharacterDto.aiTokenId, user.userId as number)
-        
-        return this.agentSerivce.addAgentCharacter(
-            agentCharacterDto.aiTokenId,
-            agentCharacterDto.agentName,
-            agentCharacterDto.agentIpfsUrl,
-            agentCharacterDto.agentImageUrl
-        )
+    return this.agentSerivce.addPersonality(
+      agentPersonalityDto.aiTokenId,
+      agentPersonalityDto.voiceType,
+      agentPersonalityDto.personalityType,
+    );
+  }
 
-    }
+  @Get('')
+  async getAgents(@Query() filters: GetAgentsDto) {
+    return this.agentSerivce.getAgents(filters);
+  }
 
-    @Post("add-token-personality")
-    @UseGuards(PrivyAuthGuard)
-    @ApiBearerAuth()
-    @ApiSecurity('bearer')
-    async addAgentPersonality(@Body() agentPersonalityDto: AgentPersonalityDto, @GetUser user) {
+  @Get('templates')
+  async getAgentTemplates() {
+    return this.agentSerivce.getAgentTemplates();
+  }
 
-        await this.checkUserOwnsAgent(agentPersonalityDto.aiTokenId, user.userId as number)
-
-        return this.agentSerivce.addPersonality(
-            agentPersonalityDto.aiTokenId,
-            agentPersonalityDto.voiceType,
-            agentPersonalityDto.personalityType
-        )
-
-    }
-
-    @Get("")
-    async getAgents(@Query() filters: GetAgentsDto) {
-        return this.agentSerivce.getAgents(filters)
-    }
-
-    @Get("templates")
-    async getAgentTemplates() {
-        return this.agentSerivce.getAgentTemplates()
-    }
-
-    @Get(":id")
-    async getAgent(@Param("id", ParseIntPipe) id: number) {
-        return this.agentSerivce.getAgent(id)
-    }
-
+  @Get(':id')
+  async getAgent(@Param('id', ParseIntPipe) id: number) {
+    return this.agentSerivce.getAgent(id);
+  }
 }
