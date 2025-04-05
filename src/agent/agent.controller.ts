@@ -1,6 +1,5 @@
 import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiSecurity } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AiTokenDto } from './dto/post/aiToken.dto';
 import { AgentService } from './agent.service';
@@ -8,6 +7,8 @@ import { CurrentUser } from 'src/decorators';
 import { AgentCharacterDto } from './dto/post/agentCharacter.dto';
 import { AgentPersonalityDto } from './dto/post/personality.dto';
 import { GetAgentsDto } from './dto/get/agents.dto';
+import { GetUser } from 'src/auth/privy-decorator';
+import { PrivyAuthGuard } from 'src/auth/privy-auth-guard';
 
 @Controller('agent')
 export class AgentController {
@@ -30,10 +31,10 @@ export class AgentController {
     }
 
     @Post("create-token")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(PrivyAuthGuard)
     @ApiBearerAuth()
     @ApiSecurity('bearer')
-    async createToken(@Body() aiTokenDto: AiTokenDto, @CurrentUser() user) {
+    async createToken(@Body() aiTokenDto: AiTokenDto, @GetUser user: any) {
 
         return this.agentSerivce.createToken(
             user.userId as number,
@@ -55,10 +56,10 @@ export class AgentController {
     }
 
     @Post("add-token-character")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(PrivyAuthGuard)
     @ApiBearerAuth()
     @ApiSecurity('bearer')
-    async addAgentCharacter(@Body() agentCharacterDto: AgentCharacterDto, @CurrentUser() user) {
+    async addAgentCharacter(@Body() agentCharacterDto: AgentCharacterDto, @GetUser user) {
 
         await this.checkUserOwnsAgent(agentCharacterDto.aiTokenId, user.userId as number)
         
@@ -72,10 +73,10 @@ export class AgentController {
     }
 
     @Post("add-token-personality")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(PrivyAuthGuard)
     @ApiBearerAuth()
     @ApiSecurity('bearer')
-    async addAgentPersonality(@Body() agentPersonalityDto: AgentPersonalityDto, @CurrentUser() user) {
+    async addAgentPersonality(@Body() agentPersonalityDto: AgentPersonalityDto, @GetUser user) {
 
         await this.checkUserOwnsAgent(agentPersonalityDto.aiTokenId, user.userId as number)
 

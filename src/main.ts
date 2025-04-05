@@ -31,6 +31,6 @@ async function bootstrap() {
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port, "0.0.0.0");
 
-  console.log(`Shilltube Backend is running on: ${await app.getUrl()}`);
+  console.log(`Shello Backend is running on: ${await app.getUrl()}`);
 }
 bootstrap();
