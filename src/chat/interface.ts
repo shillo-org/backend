@@ -1,6 +1,9 @@
+
 export interface ChatMessage {
-    username: string;
-    profile_pic: string;
-    message: string;
-    timestamp?: string;
-  }
+  id: string;
+  user: string;
+  text: string;
+  timestamp: Date;
+  isAI: boolean;
+  isCurrentUser?: boolean;
+}

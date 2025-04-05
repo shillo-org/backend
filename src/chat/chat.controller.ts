@@ -23,28 +23,37 @@ export class ChatController {
   }
 
   @Post('streams/:streamId/messages')
-  @UseGuards(PrivyAuthGuard)
-  @ApiBearerAuth()
-  @ApiSecurity('bearer')
+  // @UseGuards(PrivyAuthGuard)
+  // @ApiBearerAuth()
+  // @ApiSecurity('bearer')
   @ApiOperation({ summary: 'Post a new message to a specific stream' })
   @ApiParam({ name: 'streamId', description: 'ID of the chat stream' })
   @ApiBody({ 
     description: 'Message details', 
     schema: {
       type: 'object',
-      required: ['username', 'profile_pic', 'message'],
+      required: ['message'],
       properties: {
-        username: { type: 'string', example: 'john_doe' },
-        profile_pic: { type: 'string', example: 'https://example.com/avatar.jpg' },
         message: { type: 'string', example: 'Hello everyone!' },
       },
     }
   })
   postMessage(
     @Param('streamId') streamId: string,
-    @Body() messageData: ChatMessage,
+    @Body() messageData: {message: string},
   ) {
-    const newMessage = this.chatService.addMessage(streamId, messageData);
+
+    
+    const message: ChatMessage = {
+      id: Math.random().toString(36).substring(2, 15),
+      user: "",
+      text: messageData.message,
+      timestamp: new Date(),
+      isAI: true,
+      isCurrentUser: false
+    };
+    
+    const newMessage = this.chatService.addMessage(streamId, message);
     
     return {
       success: true,

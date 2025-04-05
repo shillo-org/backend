@@ -15,6 +15,9 @@ import { Logger } from '@nestjs/common';
 @WebSocketGateway({
   cors: {
     origin: '*', // In production, specify your frontend origin
+    methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
