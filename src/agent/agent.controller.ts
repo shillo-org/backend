@@ -118,7 +118,7 @@ export class AgentController {
       user.userId as number,
     );
 
-    this.prismaService.aIToken.update({
+    const updatedUser = await this.prismaService.aIToken.update({
       where: {
         id: agentContract.aiTokenId
       },
@@ -126,6 +126,8 @@ export class AgentController {
         contractAddress: agentContract.contractAddress
       }
     })
+
+    return updatedUser
   }
 
   @Get('')
