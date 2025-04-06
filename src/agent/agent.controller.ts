@@ -105,6 +105,29 @@ export class AgentController {
     );
   }
 
+  @Post('add-token-contract')
+  @UseGuards(PrivyAuthGuard)
+  @ApiBearerAuth()
+  @ApiSecurity('bearer')
+  async addContract(
+    @Body() agentContract: {aiTokenId: number, contractAddress: string},
+    @GetUser user,
+  ) {
+    await this.checkUserOwnsAgent(
+      agentContract.aiTokenId,
+      user.userId as number,
+    );
+
+    this.prismaService.aIToken.update({
+      where: {
+        id: agentContract.aiTokenId
+      },
+      data: {
+        contractAddress: agentContract.contractAddress
+      }
+    })
+  }
+
   @Get('')
   async getAgents(@Query() filters: GetAgentsDto) {
     return this.agentSerivce.getAgents(filters);
